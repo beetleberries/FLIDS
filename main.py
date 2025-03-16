@@ -4,7 +4,7 @@ import re
 
 def main():
     print("NumPy version:", np.__version__)
-    data = read_can_data("data/OpelAstra/full_data_capture.log")
+    data = read_can_data("data/RenaultClio/dosattack.log")
     print(data[:5])
 
     timestamps = data[:, 0].astype(float)
