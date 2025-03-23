@@ -34,6 +34,7 @@ MANIFEST
 
 #csv
 *.csv
+.csv
 
 # Installer logs
 pip-log.txt
