@@ -1,0 +1,73 @@
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+from tensorflow.keras.models import Sequential, Model
+from tensorflow.keras.layers import LSTM, Dense, RepeatVector, TimeDistributed, Input
+from tensorflow.keras.optimizers import Adam
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.model_selection import train_test_split
+
+# Load and preprocess data
+def readcsv(filepath):
+    df = pd.read_csv(filepath)
+    df.columns = df.columns.str.strip()  # Remove spaces in column names
+    df['Data'] = df['Data'].apply(lambda x: int(x.replace(' ', ''), 16))  # Convert hex to int
+    df['Arbitration_ID'] = df['Arbitration_ID'] / df['Arbitration_ID'].max()  # Normalize ID
+    df['Timestamp'] = df['Timestamp'].diff().fillna(0)  # Convert timestamp to delta time
+    return df
+
+# Create sequences
+def create_sequences(data, seq_length=10):
+    X = np.lib.stride_tricks.sliding_window_view(data.values, (seq_length, data.shape[1]))[:, 0, :, :]
+    return X
+
+# Load data
+df = readcsv("./Car_Hacking_Challenge_Dataset_rev20Mar2021/0_Preliminary/0_Training/Pre_train_D_0.csv")
+normal_data = df[df['Class'] == 0][['Timestamp', 'Arbitration_ID', 'Data']]  # Only normal data
+scaler = MinMaxScaler()
+normal_data = scaler.fit_transform(normal_data)
+
+# Create training sequences
+SEQ_LENGTH = 10
+X_train = create_sequences(pd.DataFrame(normal_data), seq_length=SEQ_LENGTH)
+X_train, X_val = train_test_split(X_train, test_size=0.2, random_state=42)
+
+# Define LSTM Autoencoder model
+def build_autoencoder(seq_length, features):
+    inputs = Input(shape=(seq_length, features))
+    encoded = LSTM(32, activation='relu', return_sequences=True)(inputs)
+    encoded = LSTM(16, activation='relu', return_sequences=False)(encoded)
+    
+    decoded = RepeatVector(seq_length)(encoded)
+    decoded = LSTM(16, activation='relu', return_sequences=True)(decoded)
+    decoded = LSTM(32, activation='relu', return_sequences=True)(decoded)
+    decoded = TimeDistributed(Dense(features))(decoded)
+    
+    autoencoder = Model(inputs, decoded)
+    autoencoder.compile(optimizer=Adam(learning_rate=0.001), loss='mse')
+    return autoencoder
+
+# Train model
+model = build_autoencoder(SEQ_LENGTH, X_train.shape[2])
+early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=2, restore_best_weights=True)
+model.fit(X_train, X_train, validation_data=(X_val, X_val), epochs=50, batch_size=64, callbacks=[early_stop])
+
+# Save model
+model.save("./modelslstm_autoencoder.h5")
+
+# Detect anomalies
+def detect_anomalies(model, data, threshold_factor=1.5):
+    reconstructions = model.predict(data)
+    mse = np.mean(np.power(data - reconstructions, 2), axis=(1, 2))
+    threshold = np.mean(mse) + threshold_factor * np.std(mse)
+    anomalies = mse > threshold
+    return anomalies, mse, threshold
+
+# Test on new data
+test_data = create_sequences(pd.DataFrame(scaler.transform(df[['Timestamp', 'Arbitration_ID', 'Data']])), seq_length=SEQ_LENGTH)
+anomalies, mse, threshold = detect_anomalies(model, test_data)
+
+# Print anomaly statistics
+print(f"Anomaly threshold: {threshold:.6f}")
+print(f"Number of anomalies detected: {np.sum(anomalies)} out of {len(anomalies)} samples")
+
