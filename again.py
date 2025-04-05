@@ -47,7 +47,8 @@ def create_sequences(df, seq_length=10):
 
 def create_lstm_model():
     model = tf.keras.Sequential([
-        tf.keras.layers.LSTM(16, return_sequences=True, activation="relu", input_shape=(SEQ_LENGTH, FEATURE_DIM)),
+        tf.keras.layers.Input(shape=(SEQ_LENGTH, FEATURE_DIM)),
+        tf.keras.layers.LSTM(16, return_sequences=True, activation="relu"),
         tf.keras.layers.LSTM(8, activation="relu"),
         tf.keras.layers.Dense(1, activation="sigmoid")
     ])
