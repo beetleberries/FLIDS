@@ -20,3 +20,4 @@ so if you cant pip3 install the requirements you need to open a virtual machine 
 Also download and put in both the car datasets:
 
     in drive: the dataset and car_hacking_dataset
+        In drive make sure to download the file in the big car_hacking file like, car_hacking -> car_hacking (drag in this one) -> 0_prelim and 1_Final 
