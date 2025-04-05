@@ -42,7 +42,7 @@ def plot_conf_matrix(y_true, y_pred):
 
 
 def main():
-    model = load_model("manual_federated_lstm_model.h5")
+    model = load_model("models/2epochmanual_federated_lstm_model.h5")
     df_test = readcsv("./Car_Hacking_Challenge_Dataset_rev20Mar2021/0_Preliminary/0_Training/Pre_train_D_2.csv")
     X_test, y_test = create_sequences(df_test, SEQ_LENGTH)
     print("predicting values")

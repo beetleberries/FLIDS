@@ -6,11 +6,9 @@ from sklearn.model_selection import train_test_split
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 import tensorflow as tf
-import tensorflow.keras
+
 from sklearn.metrics import classification_report
-print(tensorflow.keras.__version__)
-print(tf.__version__)
-print(tf.keras.__version__) 
+
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.callbacks import ModelCheckpoint
 
@@ -49,12 +47,10 @@ def compile_model(SEQ_LENGTH, featurelength):
 
     # Build LSTM Model
     model = Sequential([
-        LSTM(64, return_sequences=True, activation="relu", input_shape=(SEQ_LENGTH, featurelength)),
-        Dropout(0.2),
-        LSTM(64, return_sequences=False, activation="relu"),
-        Dropout(0.5),
-        Dense(32, activation='relu'),
-        Dense(1, activation='sigmoid')  # Binary classification
+        tf.keras.layers.Input(shape=(SEQ_LENGTH, featurelength)),
+        tf.keras.layers.LSTM(16, return_sequences=True, activation="relu"), #long short term memory
+        tf.keras.layers.LSTM(8, activation="relu"),
+        tf.keras.layers.Dense(1, activation="sigmoid")
     ])
 
     model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
@@ -72,7 +68,7 @@ def main():
     
     print(f"The amount of anomalies is {df['Class'].sum() / len(df) * 100:.2f}% currently")
 
-    SEQ_LENGTH = 50
+    SEQ_LENGTH = 10
     features = ["Timestamp", "Arbitration_ID", "Data"]
 
     print(df.columns)
@@ -95,7 +91,7 @@ def main():
     early_stop = EarlyStopping(monitor="val_loss", patience=2, restore_best_weights=True)
     checkpoint = ModelCheckpoint(
     "models/lstm_most_recent_best_model.weights.h5", monitor="val_loss", save_best_only=True, save_weights_only=True)
-    model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=50, callbacks=[early_stop, checkpoint])
+    model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=3, callbacks=[early_stop, checkpoint])
 
     # Evaluate the model
     loss, accuracy = model.evaluate(X_test, y_test)

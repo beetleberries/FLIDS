@@ -6,7 +6,7 @@ SEQ_LENGTH = 20
 NUM_CLIENTS = 3
 NUM_ROUNDS = 3
 FEATURE_DIM = 3
-EPOCHS = 1
+EPOCHS = 2
 BATCH_SIZE = 32
 
 def readcsv(filepath):
@@ -48,7 +48,7 @@ def create_sequences(df, seq_length=10):
 def create_lstm_model():
     model = tf.keras.Sequential([
         tf.keras.layers.Input(shape=(SEQ_LENGTH, FEATURE_DIM)),
-        tf.keras.layers.LSTM(16, return_sequences=True, activation="relu"),
+        tf.keras.layers.LSTM(16, return_sequences=True, activation="relu"), #long short term memory
         tf.keras.layers.LSTM(8, activation="relu"),
         tf.keras.layers.Dense(1, activation="sigmoid")
     ])
@@ -98,7 +98,7 @@ def main():
             total_samples += len(client_X[i])
         print(f"Round {round_num} -- Loss: {total_loss / total_samples:.4f}, Accuracy: {total_acc / total_samples:.4f}")
 
-    global_model.save("manual_federated_lstm_model.h5")
+    global_model.save("models/2epochmanual_federated_lstm_model.h5")
     print("Saved final model as 'manual_federated_lstm_model.h5'")
 
 if __name__ == "__main__":
