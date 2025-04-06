@@ -6,7 +6,7 @@ SEQ_LENGTH = 20
 NUM_CLIENTS = 3
 NUM_ROUNDS = 3
 FEATURE_DIM = 3
-EPOCHS = 2
+EPOCHS = 1
 BATCH_SIZE = 32
 
 def readcsv(filepath):
@@ -98,8 +98,8 @@ def main():
             total_samples += len(client_X[i])
         print(f"Round {round_num} -- Loss: {total_loss / total_samples:.4f}, Accuracy: {total_acc / total_samples:.4f}")
 
-    global_model.save("models/2epochmanual_federated_lstm_model.h5")
-    print("Saved final model as 'manual_federated_lstm_model.h5'")
+    global_model.save("models/retraindefaultmanual_federated_lstm_model.h5")
+    print("Saved model")
 
 if __name__ == "__main__":
     main()
